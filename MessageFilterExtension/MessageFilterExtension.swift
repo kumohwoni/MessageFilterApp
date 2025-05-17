@@ -57,9 +57,35 @@ extension MessageFilterExtension: ILMessageFilterQueryHandling, ILMessageFilterC
     }
 
     private func offlineAction(for queryRequest: ILMessageFilterQueryRequest) -> (ILMessageFilterAction, ILMessageFilterSubAction) {
-        // TODO: Replace with logic to perform offline check whether to filter first (if possible).
+        let userDefaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")  // 너의 App Group ID
+        
+        let total = userDefaults?.integer(forKey: "totalReceivedCount") ?? 0
+        userDefaults?.set(total + 1, forKey: "totalReceivedCount")
+        
+        let whitelist = userDefaults?.stringArray(forKey: "whitelist") ?? []
+        let blacklist = userDefaults?.stringArray(forKey: "blacklist") ?? []
+
+        let messageBody = queryRequest.messageBody?.lowercased() ?? ""
+        
+        // 화이트리스트 단어가 포함되면 허용
+        if whitelist.contains(where: { messageBody.contains($0.lowercased()) }) {
+            let allow = userDefaults?.integer(forKey: "allowCount") ?? 0
+            userDefaults?.set(allow + 1, forKey: "allowCount")
+            return (.allow, .none)
+        }
+
+        // 블랙리스트 단어가 포함되면 무조건 junk 처리
+        if blacklist.contains(where: { messageBody.contains($0.lowercased()) }) {
+            let junk = userDefaults?.integer(forKey: "junkCount") ?? 0
+            userDefaults?.set(junk + 1, forKey: "junkCount")
+            return (.junk, .none)
+        }
+        
+        // 아무 것도 해당 안 되면 그냥 필터링 (기본값: none)
         return (.none, .none)
     }
+
+
 
     private func networkAction(for networkResponse: ILNetworkResponse) -> (ILMessageFilterAction, ILMessageFilterSubAction) {
         // TODO: Replace with logic to parse the HTTP response and data payload of `networkResponse` to return an action.

@@ -50,10 +50,13 @@ struct BlacklistView: View {
     }
 
     func saveKeywords() {
-        UserDefaults.standard.set(keywords, forKey: "blacklist")
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        defaults?.set(keywords, forKey: "blacklist")
     }
 
     func loadKeywords() {
-        keywords = UserDefaults.standard.stringArray(forKey: "blacklist") ?? []
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        keywords = defaults?.stringArray(forKey: "blacklist") ?? []
     }
+
 }

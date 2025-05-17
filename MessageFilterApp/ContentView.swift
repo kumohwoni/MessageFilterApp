@@ -1,10 +1,20 @@
+//
+//  ContentView.swift
+//  MessageFilterApp
+//
 import SwiftUI
 
 struct ContentView: View {
     @State private var localSpamFilterOn = true
     @State private var advancedSpamFilterOn = false
-    @State private var totalMessages = UserDefaults.standard.integer(forKey: "totalMessages")
-    @State private var blockedMessages = UserDefaults.standard.integer(forKey: "blockedMessages")
+    
+    @State private var totalMessages = 0
+    @State private var blockedMessages = 0
+
+    var spamRate: Double {
+        Double(blockedMessages) / max(Double(totalMessages), 1.0)
+    }
+
 
     var body: some View {
         NavigationView {
@@ -39,7 +49,7 @@ struct ContentView: View {
                                     .stroke(Color.red, style: StrokeStyle(lineWidth: 20, lineCap: .round))
                                     .rotationEffect(.degrees(-90))
 
-                                Text("\(Int(Double(blockedMessages) / max(Double(totalMessages), 1.0) * 100))%")
+                                Text("\(Int(spamRate * 100))%")
                                     .font(.title2)
                                     .bold()
                             }
@@ -59,8 +69,11 @@ struct ContentView: View {
 
                     // 테스트용 버튼
                     Button(action: {
-                        totalMessages += 1
-                        blockedMessages += 1
+                        let addedTotal = Int.random(in: 1...10)
+                        let addedBlocked = Int.random(in: 1...min(addedTotal, 10))
+
+                        totalMessages += addedTotal
+                        blockedMessages += addedBlocked
                         saveStats()
                     }) {
                         Text("테스트용 메시지 차단 증가")
@@ -70,16 +83,24 @@ struct ContentView: View {
                             .foregroundColor(.white)
                             .cornerRadius(10)
                     }
+
                 }
                 .padding()
+                .onAppear(perform: loadStats)
             }
             .navigationBarHidden(true)
         }
     }
+    func loadStats() {
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        totalMessages = defaults?.integer(forKey: "totalReceivedCount") ?? 0
+        blockedMessages = defaults?.integer(forKey: "junkCount") ?? 0
+    }
 
     func saveStats() {
-        UserDefaults.standard.set(totalMessages, forKey: "totalMessages")
-        UserDefaults.standard.set(blockedMessages, forKey: "blockedMessages")
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        defaults?.set(totalMessages, forKey: "totalReceivedCount")
+        defaults?.set(blockedMessages, forKey: "junkCount")
     }
 }
 

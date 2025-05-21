@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B0C6DA02DDC3D9E00707FDA /* IdentityLookup.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B0C6D9F2DDC3D9E00707FDA /* IdentityLookup.framework */; };
+		2B0C6DA22DDC3DA400707FDA /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B0C6DA12DDC3DA400707FDA /* CoreML.framework */; };
 		2B1939AC2DD8D6100067AABA /* MessageFilterExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2B1939A52DD8D6100067AABA /* MessageFilterExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -49,6 +51,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2B0C6D9F2DDC3D9E00707FDA /* IdentityLookup.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IdentityLookup.framework; path = System/Library/Frameworks/IdentityLookup.framework; sourceTree = SDKROOT; };
+		2B0C6DA12DDC3DA400707FDA /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		2B1939652DD89DC70067AABA /* MessageFilterApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MessageFilterApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B1939722DD89DCA0067AABA /* MessageFilterAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MessageFilterAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B19397C2DD89DCA0067AABA /* MessageFilterAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MessageFilterAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -63,11 +67,23 @@
 			);
 			target = 2B1939A42DD8D6100067AABA /* MessageFilterExtension */;
 		};
+		2B3E155C2DDAF265007E16EB /* Exceptions for "MessageFilterApp" folder in "MessageFilterExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Model.mlpackage,
+				vocab.txt,
+				WordPieceTokenizer.swift,
+			);
+			target = 2B1939A42DD8D6100067AABA /* MessageFilterExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2B1939672DD89DC70067AABA /* MessageFilterApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2B3E155C2DDAF265007E16EB /* Exceptions for "MessageFilterApp" folder in "MessageFilterExtension" target */,
+			);
 			path = MessageFilterApp;
 			sourceTree = "<group>";
 		};
@@ -117,12 +133,23 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B0C6DA22DDC3DA400707FDA /* CoreML.framework in Frameworks */,
+				2B0C6DA02DDC3D9E00707FDA /* IdentityLookup.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2B0C6D9E2DDC3D9E00707FDA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2B0C6DA12DDC3DA400707FDA /* CoreML.framework */,
+				2B0C6D9F2DDC3D9E00707FDA /* IdentityLookup.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		2B19395C2DD89DC70067AABA = {
 			isa = PBXGroup;
 			children = (
@@ -130,6 +157,7 @@
 				2B1939752DD89DCA0067AABA /* MessageFilterAppTests */,
 				2B19397F2DD89DCA0067AABA /* MessageFilterAppUITests */,
 				2B1939A62DD8D6100067AABA /* MessageFilterExtension */,
+				2B0C6D9E2DDC3D9E00707FDA /* Frameworks */,
 				2B1939662DD89DC70067AABA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -421,7 +449,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -478,7 +506,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -504,6 +532,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -533,6 +562,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -553,7 +583,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterAppTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -571,7 +601,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterAppTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -588,6 +618,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterAppUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -604,6 +635,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterAppUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -617,6 +649,7 @@
 		2B1939AF2DD8D6100067AABA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_ENTITLEMENTS = MessageFilterExtension/MessageFilterExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -625,6 +658,7 @@
 				INFOPLIST_FILE = MessageFilterExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MessageFilterExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -643,6 +677,7 @@
 		2B1939B02DD8D6100067AABA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_ENTITLEMENTS = MessageFilterExtension/MessageFilterExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -651,6 +686,7 @@
 				INFOPLIST_FILE = MessageFilterExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MessageFilterExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

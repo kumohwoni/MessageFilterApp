@@ -1,165 +1,160 @@
-//
-//  MessageFilterExtension.swift
-//  MessageFilterExtension
-//
-
 import IdentityLookup
 import CoreML
+import os
 
+private let logger = Logger(subsystem: "com.messagefilterapp", category: "FilterExt")
 
-final class MessageFilterExtension: ILMessageFilterExtension {}
+final class MessageFilterExtension: ILMessageFilterExtension {
+    // 1. 모델과 vocab은 static으로 한 번만 로드
+    private static let mlConfig: MLModelConfiguration = {
+        let cfg = MLModelConfiguration()
+        cfg.computeUnits = .cpuAndNeuralEngine
+        return cfg
+    }()
+    
+    private static let model: Model = {
+        do {
+            return try Model(configuration: mlConfig)
+        } catch {
+            fatalError("ML 모델 로드 실패: \(error)")
+        }
+    }()
+    
+    private static let vocab: [String: Int] = {
+        guard let v = WordPieceTokenizer.loadVocab(from: "vocab.txt") else {
+            logger.error("vocab.txt 로드 실패")
+            return [:]
+        }
+        return v
+    }()
+}
 
 extension MessageFilterExtension: ILMessageFilterQueryHandling, ILMessageFilterCapabilitiesQueryHandling {
-    func handle(_ capabilitiesQueryRequest: ILMessageFilterCapabilitiesQueryRequest, context: ILMessageFilterExtensionContext, completion: @escaping (ILMessageFilterCapabilitiesQueryResponse) -> Void) {
+    func handle(_ capabilitiesQueryRequest: ILMessageFilterCapabilitiesQueryRequest,
+                context: ILMessageFilterExtensionContext,
+                completion: @escaping (ILMessageFilterCapabilitiesQueryResponse) -> Void) {
         let response = ILMessageFilterCapabilitiesQueryResponse()
+        #if DEBUG
+        logger.debug("capabilitiesQuery 진입")
+        #endif
         
-        NSLog("[FilterExt] capabilitiesQuery 진입")
-
-
-        // TODO: Update subActions from ILMessageFilterSubAction enum
         response.transactionalSubActions = []
         response.promotionalSubActions   = []
-
         completion(response)
     }
 
-    func handle(_ queryRequest: ILMessageFilterQueryRequest, context: ILMessageFilterExtensionContext, completion: @escaping (ILMessageFilterQueryResponse) -> Void) {
-        // First, check whether to filter using offline data (if possible).
-        NSLog("[FilterExt] **queryRequest** 진입 from=\(queryRequest.sender ?? "")")
-        let (offlineAction, offlineSubAction) = self.offlineAction(for: queryRequest)
-
+    func handle(_ queryRequest: ILMessageFilterQueryRequest,
+                context: ILMessageFilterExtensionContext,
+                completion: @escaping (ILMessageFilterQueryResponse) -> Void) {
+        #if DEBUG
+        logger.debug("queryRequest 진입 from=\(queryRequest.sender ?? "")")
+        #endif
+        
+        let (offlineAction, offlineSub) = self.offlineAction(for: queryRequest)
         switch offlineAction {
         case .allow, .junk, .promotion, .transaction:
-            // Based on offline data, we know this message should either be Allowed, Filtered as Junk, Promotional or Transactional. Send response immediately.
-            let response = ILMessageFilterQueryResponse()
-            response.action = offlineAction
-            response.subAction = offlineSubAction
-
-            completion(response)
-
+            let resp = ILMessageFilterQueryResponse()
+            resp.action = offlineAction
+            resp.subAction = offlineSub
+            completion(resp)
         case .none:
-            // Based on offline data, we do not know whether this message should be Allowed or Filtered. Defer to network.
-            // Note: Deferring requests to network requires the extension target's Info.plist to contain a key with a URL to use. See documentation for details.
-            context.deferQueryRequestToNetwork() { (networkResponse, error) in
-                let response = ILMessageFilterQueryResponse()
-                response.action = .none
-                response.subAction = .none
-
-                if let networkResponse = networkResponse {
-                    // If we received a network response, parse it to determine an action to return in our response.
-                    (response.action, response.subAction) = self.networkAction(for: networkResponse)
+            context.deferQueryRequestToNetwork() { networkResponse, error in
+                let resp = ILMessageFilterQueryResponse()
+                resp.action = .none
+                resp.subAction = .none
+                
+                if let net = networkResponse {
+                    resp.action = self.networkAction(for: net).0
+                    resp.subAction = self.networkAction(for: net).1
                 } else {
-                    NSLog("Error deferring query request to network: \(String(describing: error))")
+                    logger.error("네트워크 연기 실패: \(String(describing: error))")
                 }
-
-                completion(response)
+                completion(resp)
             }
-
         @unknown default:
-            break
+            let resp = ILMessageFilterQueryResponse()
+            resp.action = .none
+            resp.subAction = .none
+            completion(resp)
         }
     }
 
-    private func offlineAction(for queryRequest: ILMessageFilterQueryRequest) -> (ILMessageFilterAction, ILMessageFilterSubAction) {
-        
+    private func offlineAction(for queryRequest: ILMessageFilterQueryRequest)
+    -> (ILMessageFilterAction, ILMessageFilterSubAction) {
         let groupID = "group.com.messagefilterapp.shared"
         guard let userDefaults = UserDefaults(suiteName: groupID) else {
-            NSLog("[MFEXT-DEBUG] ❌ UserDefaults 초기화 실패 for \(groupID)")
+            logger.error("UserDefaults 초기화 실패 for \(groupID)")
             return (.allow, .none)
         }
-        NSLog("[MFEXT-DEBUG] ✅ UserDefaults 초기화 성공 for \(groupID)")
+        #if DEBUG
+        logger.debug("UserDefaults 초기화 성공 for \(groupID)")
+        #endif
         
-        // App Group 컨테이너 경로
-        if let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) {
-            NSLog("[MFEXT-DEBUG] 📂 컨테이너 경로: \(url.path)")
-        } else {
-            NSLog("[MFEXT-DEBUG] ⚠️ 컨테이너 경로 읽기 실패")
-        }
+        // 통계 업데이트
+        let total = userDefaults.integer(forKey: "totalReceivedCount") + 1
+        userDefaults.set(total, forKey: "totalReceivedCount")
         
-        // totalReceivedCount 읽기 전후
-        let totalBefore = userDefaults.integer(forKey: "totalReceivedCount")
-        NSLog("[MFEXT-DEBUG] 🔢 totalBefore = \(totalBefore)")
-        userDefaults.set(totalBefore + 1, forKey: "totalReceivedCount")
-        userDefaults.synchronize()
-        let totalAfter = userDefaults.integer(forKey: "totalReceivedCount")
-        NSLog("[MFEXT-DEBUG] 🔢 totalAfter  = \(totalAfter)")
-        
-        // 키워드 리스트 & 본문
+        // 화이트/블랙리스트 검사
         let whitelist = userDefaults.stringArray(forKey: "whitelist") ?? []
         let blacklist = userDefaults.stringArray(forKey: "blacklist") ?? []
-        let body = queryRequest.messageBody ?? ""
-        NSLog("[MFEXT-DEBUG] ✉️ 본문: \"\(body)\"")
-        NSLog("[MFEXT-DEBUG] ⚪️ whitelist = \(whitelist)")
-        NSLog("[MFEXT-DEBUG] ⚫️ blacklist = \(blacklist)")
+        let body = queryRequest.messageBody?.lowercased() ?? ""
         
-        // 화이트리스트 검사
-        if whitelist.contains(where: { body.lowercased().contains($0.lowercased()) }) {
-            NSLog("[MFEXT-DEBUG] ✅ 화이트리스트 매칭 → allow")
+        if whitelist.contains(where: { body.contains($0.lowercased()) }) {
+            #if DEBUG
+            logger.debug("화이트리스트 매칭 → allow")
+            #endif
             return (.allow, .none)
         }
-        // 블랙리스트 검사
-        if blacklist.contains(where: { body.lowercased().contains($0.lowercased()) }) {
-            NSLog("[MFEXT-DEBUG] ✅ 블랙리스트 매칭 → junk")
+        if blacklist.contains(where: { body.contains($0.lowercased()) }) {
+            #if DEBUG
+            logger.debug("블랙리스트 매칭 → junk")
+            #endif
             return (.junk, .none)
         }
+        
+        // 4. 타입-세이프 CoreML 인터페이스 + 5. do-catch
+        guard !Self.vocab.isEmpty else {
+            return (.allow, .none)
+        }
+        let tokenizer = WordPieceTokenizer(vocab: Self.vocab)
+        let (inputIds, attentionMask) = tokenizer.tokenize(queryRequest.messageBody ?? "")
+        
+        do {
+            guard let inputArray = MLMultiArray.from(inputIds),
+                  let maskArray  = MLMultiArray.from(attentionMask) else {
+                logger.error("MLMultiArray 변환 실패")
+                return (.allow, .none)
+            }
 
-        // ML 분기 시도
-        NSLog("[MFEXT-DEBUG] 🤖 ML 분기 시도 시작")
-        if let vocab = WordPieceTokenizer.loadVocab(from: "vocab.txt") {
-            NSLog("[MFEXT-DEBUG] 🤖 vocab 로드 성공, 크기 = \(vocab.count)")
+            let modelInput = ModelInput(input_ids: inputArray,
+                                        attention_mask: maskArray)
             
-            let tokenizer = WordPieceTokenizer(vocab: vocab)
-            let (inputIds, attentionMask) = tokenizer.tokenize(queryRequest.messageBody ?? "")
-            NSLog("[MFEXT-DEBUG] 🤖 토큰화 완료, inputIds=\(inputIds), mask=\(attentionMask)")
-
-            guard
-                let inputArray  = MLMultiArray.from(inputIds),
-                let maskArray   = MLMultiArray.from(attentionMask),
-                let modelURL    = Bundle.main.url(forResource: "Model", withExtension: "mlpackage"),
-                let model       = try? MLModel(contentsOf: modelURL)
-            else {
-                NSLog("[MFEXT-DEBUG] ⚠️ ML 입력 변환 또는 모델 로드 실패")
-                NSLog("[MFEXT-DEBUG] 🚦 기본 분기 → allow")
-                return (.allow, .none)
-            }
-            NSLog("[MFEXT-DEBUG] 🤖 ML 모델 로드 성공 from \(modelURL.lastPathComponent)")
-
-            let features = try? MLDictionaryFeatureProvider(dictionary: [
-                "input_ids":      inputArray,
-                "attention_mask": maskArray
-            ])
-            if let pred = try? model.prediction(from: features!),
-               let label = pred.featureValue(for: "classLabel")?.stringValue {
-                NSLog("[MFEXT-DEBUG] 🤖 ML 예측 label = \(label)")
-                if label == "LABEL_1" {
-                    NSLog("[MFEXT-DEBUG] 🤖 ML 분기 → junk")
-                    let junkCount = userDefaults.integer(forKey: "junkCount")
-                    userDefaults.set(junkCount + 1, forKey: "junkCount")
-                    return (.junk, .none)
-                } else {
-                    NSLog("[MFEXT-DEBUG] 🤖 ML 분기 → allow")
-                    let allowCount = userDefaults.integer(forKey: "allowCount")
-                    userDefaults.set(allowCount + 1, forKey: "allowCount")
-                    return (.allow, .none)
-                }
+            let output = try Self.model.prediction(input: modelInput)
+            let label = output.classLabel
+            
+            #if DEBUG
+            logger.debug("ML 예측 label=\(label)")
+            #endif
+            
+            if label == "LABEL_1" {
+                let cnt = userDefaults.integer(forKey: "junkCount") + 1
+                userDefaults.set(cnt, forKey: "junkCount")
+                return (.junk, .none)
             } else {
-                NSLog("[MFEXT-DEBUG] ⚠️ ML 예측 실패")
-                NSLog("[MFEXT-DEBUG] 🚦 기본 분기 → allow")
+                let cnt = userDefaults.integer(forKey: "allowCount") + 1
+                userDefaults.set(cnt, forKey: "allowCount")
                 return (.allow, .none)
             }
-        } else {
-            NSLog("[MFEXT-DEBUG] ⚠️ vocab.txt 로드 실패")
-            NSLog("[MFEXT-DEBUG] 🚦 기본 분기 → allow")
+        } catch {
+            logger.error("ML 처리 오류: \(error)")
             return (.allow, .none)
         }
     }
 
-
-
-
-    private func networkAction(for networkResponse: ILNetworkResponse) -> (ILMessageFilterAction, ILMessageFilterSubAction) {
-        // TODO: Replace with logic to parse the HTTP response and data payload of `networkResponse` to return an action.
+    private func networkAction(for networkResponse: ILNetworkResponse)
+    -> (ILMessageFilterAction, ILMessageFilterSubAction) {
+        // 네트워크 필터링 로직이 필요 없다면 .none 리턴
+        logger.debug("networkAction 호출됨")
         return (.none, .none)
     }
-
 }

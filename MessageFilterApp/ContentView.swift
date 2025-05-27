@@ -8,10 +8,8 @@ struct ContentView: View {
     @State private var localSpamFilterOn = true
     @State private var advancedSpamFilterOn = false
 
-    @AppStorage("totalReceivedCount", store: UserDefaults(suiteName: "group.com.messagefilterapp.shared")!)
-    private var totalMessages: Int = 0
-    @AppStorage("junkCount", store: UserDefaults(suiteName: "group.com.messagefilterapp.shared")!)
-    private var blockedMessages: Int = 0
+    @State private var totalMessages: Int = 0
+    @State private var blockedMessages: Int = 0
 
     var spamRate: Double {
         Double(blockedMessages) / max(Double(totalMessages), 1.0)
@@ -82,6 +80,23 @@ struct ContentView: View {
             }
             .navigationBarHidden(true)
         }
+        .onAppear {
+            let shared = UserDefaults(suiteName: "group.com.messagefilterapp.shared")!
+            // 1) 앱 실행 시 한 번 읽어오기
+            totalMessages   = shared.integer(forKey: "totalReceivedCount")
+            blockedMessages = shared.integer(forKey: "junkCount")
+            
+            // 2) 외부(Extension)에서 UserDefaults가 바뀌면 즉시 반영
+            NotificationCenter.default.addObserver(
+                forName: UserDefaults.didChangeNotification,
+                object: shared,
+                queue: .main
+            ) { _ in
+                totalMessages   = shared.integer(forKey: "totalReceivedCount")
+                blockedMessages = shared.integer(forKey: "junkCount")
+            }
+        }
+
     }
 }
 

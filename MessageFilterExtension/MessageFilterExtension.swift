@@ -1,160 +1,197 @@
+//
+//  MessageFilterExtension.swift
+//  MyAppMessageFilterExtension
+//
+
 import IdentityLookup
-import CoreML
-import os
 
-private let logger = Logger(subsystem: "com.messagefilterapp", category: "FilterExt")
-
-final class MessageFilterExtension: ILMessageFilterExtension {
-    // 1. 모델과 vocab은 static으로 한 번만 로드
-    private static let mlConfig: MLModelConfiguration = {
-        let cfg = MLModelConfiguration()
-        cfg.computeUnits = .cpuAndNeuralEngine
-        return cfg
-    }()
-    
-    private static let model: Model = {
-        do {
-            return try Model(configuration: mlConfig)
-        } catch {
-            fatalError("ML 모델 로드 실패: \(error)")
-        }
-    }()
-    
-    private static let vocab: [String: Int] = {
-        guard let v = WordPieceTokenizer.loadVocab(from: "vocab.txt") else {
-            logger.error("vocab.txt 로드 실패")
-            return [:]
-        }
-        return v
-    }()
-}
+final class MessageFilterExtension: ILMessageFilterExtension {}
 
 extension MessageFilterExtension: ILMessageFilterQueryHandling, ILMessageFilterCapabilitiesQueryHandling {
-    func handle(_ capabilitiesQueryRequest: ILMessageFilterCapabilitiesQueryRequest,
-                context: ILMessageFilterExtensionContext,
-                completion: @escaping (ILMessageFilterCapabilitiesQueryResponse) -> Void) {
+    
+    func handle(_ capabilitiesQueryRequest: ILMessageFilterCapabilitiesQueryRequest, context: ILMessageFilterExtensionContext, completion: @escaping (ILMessageFilterCapabilitiesQueryResponse) -> Void) {
         let response = ILMessageFilterCapabilitiesQueryResponse()
-        #if DEBUG
-        logger.debug("capabilitiesQuery 진입")
-        #endif
-        
+        // 기본 설정으로 모든 메시지 타입에 대해 필터링 가능하도록 설정
         response.transactionalSubActions = []
-        response.promotionalSubActions   = []
+        response.promotionalSubActions = []
         completion(response)
     }
-
-    func handle(_ queryRequest: ILMessageFilterQueryRequest,
-                context: ILMessageFilterExtensionContext,
-                completion: @escaping (ILMessageFilterQueryResponse) -> Void) {
-        #if DEBUG
-        logger.debug("queryRequest 진입 from=\(queryRequest.sender ?? "")")
-        #endif
+    
+    func handle(_ queryRequest: ILMessageFilterQueryRequest, context: ILMessageFilterExtensionContext, completion: @escaping (ILMessageFilterQueryResponse) -> Void) {
+        // 통계 업데이트 (전체 메시지 수 증가)
+        updateTotalMessageCount()
         
-        let (offlineAction, offlineSub) = self.offlineAction(for: queryRequest)
+        // First, check whether to filter using offline data (if possible).
+        let (offlineAction, offlineSubAction) = self.offlineAction(for: queryRequest)
+        
         switch offlineAction {
         case .allow, .junk, .promotion, .transaction:
-            let resp = ILMessageFilterQueryResponse()
-            resp.action = offlineAction
-            resp.subAction = offlineSub
-            completion(resp)
-        case .none:
-            context.deferQueryRequestToNetwork() { networkResponse, error in
-                let resp = ILMessageFilterQueryResponse()
-                resp.action = .none
-                resp.subAction = .none
-                
-                if let net = networkResponse {
-                    resp.action = self.networkAction(for: net).0
-                    resp.subAction = self.networkAction(for: net).1
-                } else {
-                    logger.error("네트워크 연기 실패: \(String(describing: error))")
-                }
-                completion(resp)
+            // Based on offline data, we know this message should either be Allowed, Filtered as Junk, Promotional or Transactional. Send response immediately.
+            let response = ILMessageFilterQueryResponse()
+            response.action = offlineAction
+            response.subAction = offlineSubAction
+            
+            // 차단된 메시지인 경우 통계 업데이트
+            if offlineAction == .junk {
+                updateBlockedMessageCount()
             }
+            
+            completion(response)
+            
+        case .none:
+            // Based on offline data, we do not know whether this message should be Allowed or Filtered. Defer to network.
+            // Note: Deferring requests to network requires the extension target's Info.plist to contain a key with a URL to use. See documentation for details.
+            context.deferQueryRequestToNetwork() { (networkResponse, error) in
+                let response = ILMessageFilterQueryResponse()
+                response.action = .none
+                response.subAction = .none
+                
+                if let networkResponse = networkResponse {
+                    // If we received a network response, parse it to determine an action to return in our response.
+                    (response.action, response.subAction) = self.networkAction(for: networkResponse)
+                    
+                    // 네트워크 응답으로 차단된 경우 통계 업데이트
+                    if response.action == .junk {
+                        self.updateBlockedMessageCount()
+                    }
+                } else {
+                    NSLog("Error deferring query request to network: \(String(describing: error))")
+                }
+                
+                completion(response)
+            }
+            
         @unknown default:
-            let resp = ILMessageFilterQueryResponse()
-            resp.action = .none
-            resp.subAction = .none
-            completion(resp)
+            break
         }
     }
-
-    private func offlineAction(for queryRequest: ILMessageFilterQueryRequest)
-    -> (ILMessageFilterAction, ILMessageFilterSubAction) {
-        let groupID = "group.com.messagefilterapp.shared"
-        guard let userDefaults = UserDefaults(suiteName: groupID) else {
-            logger.error("UserDefaults 초기화 실패 for \(groupID)")
+    
+    private func offlineAction(for queryRequest: ILMessageFilterQueryRequest) -> (ILMessageFilterAction, ILMessageFilterSubAction) {
+        guard let messageBody = queryRequest.messageBody else {
+            return (.none, .none)
+        }
+        
+        let sender = queryRequest.sender ?? ""
+        
+        // 화이트리스트 확인 (우선순위 높음)
+        if isWhitelisted(messageBody: messageBody, sender: sender) {
             return (.allow, .none)
         }
-        #if DEBUG
-        logger.debug("UserDefaults 초기화 성공 for \(groupID)")
-        #endif
         
-        // 통계 업데이트
-        let total = userDefaults.integer(forKey: "totalReceivedCount") + 1
-        userDefaults.set(total, forKey: "totalReceivedCount")
-        
-        // 화이트/블랙리스트 검사
-        let whitelist = userDefaults.stringArray(forKey: "whitelist") ?? []
-        let blacklist = userDefaults.stringArray(forKey: "blacklist") ?? []
-        let body = queryRequest.messageBody?.lowercased() ?? ""
-        
-        if whitelist.contains(where: { body.contains($0.lowercased()) }) {
-            #if DEBUG
-            logger.debug("화이트리스트 매칭 → allow")
-            #endif
-            return (.allow, .none)
-        }
-        if blacklist.contains(where: { body.contains($0.lowercased()) }) {
-            #if DEBUG
-            logger.debug("블랙리스트 매칭 → junk")
-            #endif
+        // 블랙리스트 확인
+        if isBlacklisted(messageBody: messageBody, sender: sender) {
             return (.junk, .none)
         }
         
-        // 4. 타입-세이프 CoreML 인터페이스 + 5. do-catch
-        guard !Self.vocab.isEmpty else {
-            return (.allow, .none)
+        // 기본 스팸 패턴 확인
+        if isSpamMessage(messageBody: messageBody, sender: sender) {
+            return (.junk, .none)
         }
-        let tokenizer = WordPieceTokenizer(vocab: Self.vocab)
-        let (inputIds, attentionMask) = tokenizer.tokenize(queryRequest.messageBody ?? "")
         
-        do {
-            guard let inputArray = MLMultiArray.from(inputIds),
-                  let maskArray  = MLMultiArray.from(attentionMask) else {
-                logger.error("MLMultiArray 변환 실패")
-                return (.allow, .none)
-            }
-
-            let modelInput = ModelInput(input_ids: inputArray,
-                                        attention_mask: maskArray)
-            
-            let output = try Self.model.prediction(input: modelInput)
-            let label = output.classLabel
-            
-            #if DEBUG
-            logger.debug("ML 예측 label=\(label)")
-            #endif
-            
-            if label == "LABEL_1" {
-                let cnt = userDefaults.integer(forKey: "junkCount") + 1
-                userDefaults.set(cnt, forKey: "junkCount")
-                return (.junk, .none)
-            } else {
-                let cnt = userDefaults.integer(forKey: "allowCount") + 1
-                userDefaults.set(cnt, forKey: "allowCount")
-                return (.allow, .none)
-            }
-        } catch {
-            logger.error("ML 처리 오류: \(error)")
-            return (.allow, .none)
-        }
-    }
-
-    private func networkAction(for networkResponse: ILNetworkResponse)
-    -> (ILMessageFilterAction, ILMessageFilterSubAction) {
-        // 네트워크 필터링 로직이 필요 없다면 .none 리턴
-        logger.debug("networkAction 호출됨")
+        // 판단할 수 없는 경우
         return (.none, .none)
+    }
+    
+    private func networkAction(for networkResponse: ILNetworkResponse) -> (ILMessageFilterAction, ILMessageFilterSubAction) {
+        // TODO: 네트워크 응답을 파싱하여 스팸 여부 판단
+        // 현재는 기본 동작으로 설정
+        return (.none, .none)
+    }
+    
+    // MARK: - 화이트리스트 확인
+    private func isWhitelisted(messageBody: String, sender: String) -> Bool {
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        guard let whitelist = defaults?.stringArray(forKey: "whitelist") else {
+            return false
+        }
+        
+        let lowercaseBody = messageBody.lowercased()
+        let lowercaseSender = sender.lowercased()
+        
+        for keyword in whitelist {
+            let lowercaseKeyword = keyword.lowercased()
+            if lowercaseBody.contains(lowercaseKeyword) || lowercaseSender.contains(lowercaseKeyword) {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    // MARK: - 블랙리스트 확인
+    private func isBlacklisted(messageBody: String, sender: String) -> Bool {
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        guard let blacklist = defaults?.stringArray(forKey: "blacklist") else {
+            return false
+        }
+        
+        let lowercaseBody = messageBody.lowercased()
+        let lowercaseSender = sender.lowercased()
+        
+        for keyword in blacklist {
+            let lowercaseKeyword = keyword.lowercased()
+            if lowercaseBody.contains(lowercaseKeyword) || lowercaseSender.contains(lowercaseKeyword) {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    // MARK: - 기본 스팸 패턴 확인
+    private func isSpamMessage(messageBody: String, sender: String) -> Bool {
+        let spamPatterns = [
+            // 광고 관련
+            "광고", "홍보", "이벤트", "할인", "무료", "당첨", "축하", "선물",
+            // 대출 관련
+            "대출", "대부", "빚", "담보", "신용", "카드론", "급전",
+            // 투자 관련
+            "투자", "수익", "주식", "코인", "비트코인", "재테크",
+            // 성인 관련
+            "만남", "채팅", "섹시", "19금",
+            // 기타 스팸
+            "클릭", "바로가기", "링크", "URL", "http", "bit.ly",
+            "무료체험", "100%", "즉시", "긴급", "마지막기회"
+        ]
+        
+        let lowercaseBody = messageBody.lowercased()
+        
+        // 한국어 스팸 패턴 확인
+        for pattern in spamPatterns {
+            if lowercaseBody.contains(pattern) {
+                return true
+            }
+        }
+        
+        // 숫자가 많이 포함된 메시지 (전화번호, 계좌번호 등)
+        let digitCount = messageBody.filter { $0.isNumber }.count
+        if digitCount > messageBody.count / 2 && messageBody.count > 10 {
+            return true
+        }
+        
+        // URL이 포함된 메시지
+        if lowercaseBody.contains("http") || lowercaseBody.contains("www.") || lowercaseBody.contains(".com") {
+            return true
+        }
+        
+        // 발신자가 숫자로만 구성된 경우 (일반적으로 스팸)
+        if sender.allSatisfy({ $0.isNumber || $0 == "+" || $0 == "-" }) && sender.count > 8 {
+            return true
+        }
+        
+        return false
+    }
+    
+    // MARK: - 통계 업데이트
+    private func updateTotalMessageCount() {
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        let currentCount = defaults?.integer(forKey: "totalReceivedCount") ?? 0
+        defaults?.set(currentCount + 1, forKey: "totalReceivedCount")
+    }
+    
+    private func updateBlockedMessageCount() {
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        let currentCount = defaults?.integer(forKey: "junkCount") ?? 0
+        defaults?.set(currentCount + 1, forKey: "junkCount")
     }
 }

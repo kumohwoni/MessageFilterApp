@@ -74,7 +74,8 @@ class WordPieceTokenizer {
 
 extension MLMultiArray {
     static func from(_ array: [Int32]) -> MLMultiArray? {
-        guard let mlArray = try? MLMultiArray(shape: [NSNumber(value: array.count)], dataType: .int32) else {
+        guard let mlArray = try? MLMultiArray(shape: [1, NSNumber(value: array.count)], dataType: .int32)
+ else {
             return nil
         }
         for (i, value) in array.enumerated() {

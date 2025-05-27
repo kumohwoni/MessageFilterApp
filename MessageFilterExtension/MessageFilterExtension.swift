@@ -4,8 +4,37 @@
 //
 
 import IdentityLookup
+import CoreML
+import CoreFoundation
+
 
 final class MessageFilterExtension: ILMessageFilterExtension {}
+
+// MARK: - 모델·vocab 초기화
+extension MessageFilterExtension {
+    /// 모델 파일명이 Model.mlpackage → 클래스명 Model
+    private static let spamModel: Model = {
+        do {
+            return try Model(configuration: MLModelConfiguration())
+        } catch {
+            fatalError("Core ML 모델 로드 실패: \(error)")
+        }
+    }()
+
+    /// token → index 맵으로 변환
+    private static let vocab: [String: Int] = {
+        // MessageFilterExtension.swift, vocab 로딩 부분
+        let bundle = Bundle(for: MessageFilterExtension.self)
+        guard let url = bundle.url(forResource: "vocab", withExtension: "txt"),
+              let text = try? String(contentsOf: url, encoding: .utf8) else {
+            print("vocab.txt 로드 실패")
+            return [:]
+        }
+
+        let tokens = text.split(whereSeparator: \.isNewline).map(String.init)
+        return Dictionary(uniqueKeysWithValues: tokens.enumerated().map { ($1, $0) })
+    }()
+}
 
 extension MessageFilterExtension: ILMessageFilterQueryHandling, ILMessageFilterCapabilitiesQueryHandling {
     
@@ -89,7 +118,7 @@ extension MessageFilterExtension: ILMessageFilterQueryHandling, ILMessageFilterC
         }
         
         // 판단할 수 없는 경우
-        return (.none, .none)
+        return (.allow, .none)
     }
     
     private func networkAction(for networkResponse: ILNetworkResponse) -> (ILMessageFilterAction, ILMessageFilterSubAction) {
@@ -138,51 +167,30 @@ extension MessageFilterExtension: ILMessageFilterQueryHandling, ILMessageFilterC
         return false
     }
     
-    // MARK: - 기본 스팸 패턴 확인
+    // MARK: - Core ML로 스팸 여부 판정
     private func isSpamMessage(messageBody: String, sender: String) -> Bool {
-        let spamPatterns = [
-            // 광고 관련
-            "광고", "홍보", "이벤트", "할인", "무료", "당첨", "축하", "선물",
-            // 대출 관련
-            "대출", "대부", "빚", "담보", "신용", "카드론", "급전",
-            // 투자 관련
-            "투자", "수익", "주식", "코인", "비트코인", "재테크",
-            // 성인 관련
-            "만남", "채팅", "섹시", "19금",
-            // 기타 스팸
-            "클릭", "바로가기", "링크", "URL", "http", "bit.ly",
-            "무료체험", "100%", "즉시", "긴급", "마지막기회"
-        ]
-        
-        let lowercaseBody = messageBody.lowercased()
-        
-        // 한국어 스팸 패턴 확인
-        for pattern in spamPatterns {
-            if lowercaseBody.contains(pattern) {
-                return true
-            }
+        guard !Self.vocab.isEmpty else { return false }
+        let (inputIds, attentionMask) = WordPieceTokenizer(vocab: Self.vocab)
+                                          .tokenize(messageBody)
+
+        guard let idsArr  = MLMultiArray.from(inputIds),
+              let maskArr = MLMultiArray.from(attentionMask) else {
+            print("MLMultiArray 변환 실패")
+            return false
         }
-        
-        // 숫자가 많이 포함된 메시지 (전화번호, 계좌번호 등)
-        let digitCount = messageBody.filter { $0.isNumber }.count
-        if digitCount > messageBody.count / 2 && messageBody.count > 10 {
-            return true
+        do {
+            let input  = ModelInput(input_ids: idsArr, attention_mask: maskArr)
+            let output = try Self.spamModel.prediction(input: input)
+            return output.classLabel == "LABEL_1"
+        } catch {
+            print("Core ML 예측 오류:", error)
+            return false
         }
-        
-        // URL이 포함된 메시지
-        if lowercaseBody.contains("http") || lowercaseBody.contains("www.") || lowercaseBody.contains(".com") {
-            return true
-        }
-        
-        // 발신자가 숫자로만 구성된 경우 (일반적으로 스팸)
-        if sender.allSatisfy({ $0.isNumber || $0 == "+" || $0 == "-" }) && sender.count > 8 {
-            return true
-        }
-        
-        return false
     }
     
+    
     // MARK: - 통계 업데이트
+    
     private func updateTotalMessageCount() {
         let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
         let currentCount = defaults?.integer(forKey: "totalReceivedCount") ?? 0

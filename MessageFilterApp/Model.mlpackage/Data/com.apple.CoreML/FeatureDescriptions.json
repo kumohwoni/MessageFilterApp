@@ -1,0 +1,24 @@
+{
+  "Inputs" : {
+    "attention_mask" : {
+      "MLFeatureShortDescription" : "Mask to avoid performing attention on padding token indices (1 = not masked, 0 = masked)"
+    },
+    "input_ids" : {
+      "MLFeatureShortDescription" : "Indices of input sequence tokens in the vocabulary"
+    }
+  },
+  "Outputs" : {
+    "probabilities" : {
+      "MLFeatureShortDescription" : "Probability of each category"
+    },
+    "classLabel" : {
+      "MLFeatureShortDescription" : "Category with the highest score"
+    }
+  },
+  "TrainingInputs" : {
+
+  },
+  "States" : {
+
+  }
+}

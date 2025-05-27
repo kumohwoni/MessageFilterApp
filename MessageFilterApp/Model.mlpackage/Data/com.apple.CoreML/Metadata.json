@@ -1,0 +1,17 @@
+{
+  "MLModelVersionStringKey" : "--",
+  "MLModelDescriptionKey" : "sangmin12312343\/kosp (text-classification)",
+  "MLModelCreatorDefinedKey" : {
+    "com.github.apple.coremltools.source" : "torch==2.4.0",
+    "transformers_version" : "4.51.3",
+    "com.github.apple.coremltools.version" : "8.3.0",
+    "co.huggingface.exporters.task" : "text-classification",
+    "com.github.apple.coremltools.source_dialect" : "TorchScript",
+    "co.huggingface.exporters.name" : "sangmin12312343\/kosp",
+    "co.huggingface.exporters.framework" : "pytorch",
+    "co.huggingface.exporters.architecture" : "BertModel",
+    "co.huggingface.exporters.precision" : "float16"
+  },
+  "MLModelAuthorKey" : "--",
+  "MLModelLicenseKey" : "--"
+}

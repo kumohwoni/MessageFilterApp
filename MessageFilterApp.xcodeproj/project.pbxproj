@@ -6,43 +6,77 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2B0C6DA02DDC3D9E00707FDA /* IdentityLookup.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B0C6D9F2DDC3D9E00707FDA /* IdentityLookup.framework */; };
+		2B0C6DA22DDC3DA400707FDA /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B0C6DA12DDC3DA400707FDA /* CoreML.framework */; };
+		2B1939AC2DD8D6100067AABA /* MessageFilterExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2B1939A52DD8D6100067AABA /* MessageFilterExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
-		2B1939732DD89DCA0067AABA /* PBXContainerItemProxy */ = {
+		2B1939AA2DD8D6100067AABA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 2B19395D2DD89DC70067AABA /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 2B1939642DD89DC70067AABA;
-			remoteInfo = MessageFilterApp;
-		};
-		2B19397D2DD89DCA0067AABA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 2B19395D2DD89DC70067AABA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 2B1939642DD89DC70067AABA;
-			remoteInfo = MessageFilterApp;
+			remoteGlobalIDString = 2B1939A42DD8D6100067AABA;
+			remoteInfo = MessageFilterExtension;
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		2B1939B12DD8D6100067AABA /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				2B1939AC2DD8D6100067AABA /* MessageFilterExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		2B0C6D9F2DDC3D9E00707FDA /* IdentityLookup.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IdentityLookup.framework; path = System/Library/Frameworks/IdentityLookup.framework; sourceTree = SDKROOT; };
+		2B0C6DA12DDC3DA400707FDA /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		2B1939652DD89DC70067AABA /* MessageFilterApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MessageFilterApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		2B1939722DD89DCA0067AABA /* MessageFilterAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MessageFilterAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		2B19397C2DD89DCA0067AABA /* MessageFilterAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MessageFilterAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B1939A52DD8D6100067AABA /* MessageFilterExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MessageFilterExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2B1939AD2DD8D6100067AABA /* Exceptions for "MessageFilterExtension" folder in "MessageFilterExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2B1939A42DD8D6100067AABA /* MessageFilterExtension */;
+		};
+		2BFB65E22E0535D9004027B5 /* Exceptions for "MessageFilterApp" folder in "MessageFilterExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Model.mlpackage,
+				vocab.txt,
+				WordPieceTokenizer.swift,
+			);
+			target = 2B1939A42DD8D6100067AABA /* MessageFilterExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2B1939672DD89DC70067AABA /* MessageFilterApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2BFB65E22E0535D9004027B5 /* Exceptions for "MessageFilterApp" folder in "MessageFilterExtension" target */,
+			);
 			path = MessageFilterApp;
 			sourceTree = "<group>";
 		};
-		2B1939752DD89DCA0067AABA /* MessageFilterAppTests */ = {
+		2B1939A62DD8D6100067AABA /* MessageFilterExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MessageFilterAppTests;
-			sourceTree = "<group>";
-		};
-		2B19397F2DD89DCA0067AABA /* MessageFilterAppUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MessageFilterAppUITests;
+			exceptions = (
+				2B1939AD2DD8D6100067AABA /* Exceptions for "MessageFilterExtension" folder in "MessageFilterExtension" target */,
+			);
+			path = MessageFilterExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -55,29 +89,33 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2B19396F2DD89DCA0067AABA /* Frameworks */ = {
+		2B1939A22DD8D6100067AABA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2B1939792DD89DCA0067AABA /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				2B0C6DA22DDC3DA400707FDA /* CoreML.framework in Frameworks */,
+				2B0C6DA02DDC3D9E00707FDA /* IdentityLookup.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2B0C6D9E2DDC3D9E00707FDA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2B0C6DA12DDC3DA400707FDA /* CoreML.framework */,
+				2B0C6D9F2DDC3D9E00707FDA /* IdentityLookup.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		2B19395C2DD89DC70067AABA = {
 			isa = PBXGroup;
 			children = (
 				2B1939672DD89DC70067AABA /* MessageFilterApp */,
-				2B1939752DD89DCA0067AABA /* MessageFilterAppTests */,
-				2B19397F2DD89DCA0067AABA /* MessageFilterAppUITests */,
+				2B1939A62DD8D6100067AABA /* MessageFilterExtension */,
+				2B0C6D9E2DDC3D9E00707FDA /* Frameworks */,
 				2B1939662DD89DC70067AABA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -86,8 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				2B1939652DD89DC70067AABA /* MessageFilterApp.app */,
-				2B1939722DD89DCA0067AABA /* MessageFilterAppTests.xctest */,
-				2B19397C2DD89DCA0067AABA /* MessageFilterAppUITests.xctest */,
+				2B1939A52DD8D6100067AABA /* MessageFilterExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,10 +139,12 @@
 				2B1939612DD89DC70067AABA /* Sources */,
 				2B1939622DD89DC70067AABA /* Frameworks */,
 				2B1939632DD89DC70067AABA /* Resources */,
+				2B1939B12DD8D6100067AABA /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				2B1939AB2DD8D6100067AABA /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				2B1939672DD89DC70067AABA /* MessageFilterApp */,
@@ -117,51 +156,27 @@
 			productReference = 2B1939652DD89DC70067AABA /* MessageFilterApp.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2B1939712DD89DCA0067AABA /* MessageFilterAppTests */ = {
+		2B1939A42DD8D6100067AABA /* MessageFilterExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2B1939892DD89DCA0067AABA /* Build configuration list for PBXNativeTarget "MessageFilterAppTests" */;
+			buildConfigurationList = 2B1939AE2DD8D6100067AABA /* Build configuration list for PBXNativeTarget "MessageFilterExtension" */;
 			buildPhases = (
-				2B19396E2DD89DCA0067AABA /* Sources */,
-				2B19396F2DD89DCA0067AABA /* Frameworks */,
-				2B1939702DD89DCA0067AABA /* Resources */,
+				2B1939A12DD8D6100067AABA /* Sources */,
+				2B1939A22DD8D6100067AABA /* Frameworks */,
+				2B1939A32DD8D6100067AABA /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				2B1939742DD89DCA0067AABA /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				2B1939752DD89DCA0067AABA /* MessageFilterAppTests */,
+				2B1939A62DD8D6100067AABA /* MessageFilterExtension */,
 			);
-			name = MessageFilterAppTests;
+			name = MessageFilterExtension;
 			packageProductDependencies = (
 			);
-			productName = MessageFilterAppTests;
-			productReference = 2B1939722DD89DCA0067AABA /* MessageFilterAppTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		2B19397B2DD89DCA0067AABA /* MessageFilterAppUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 2B19398C2DD89DCA0067AABA /* Build configuration list for PBXNativeTarget "MessageFilterAppUITests" */;
-			buildPhases = (
-				2B1939782DD89DCA0067AABA /* Sources */,
-				2B1939792DD89DCA0067AABA /* Frameworks */,
-				2B19397A2DD89DCA0067AABA /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				2B19397E2DD89DCA0067AABA /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				2B19397F2DD89DCA0067AABA /* MessageFilterAppUITests */,
-			);
-			name = MessageFilterAppUITests;
-			packageProductDependencies = (
-			);
-			productName = MessageFilterAppUITests;
-			productReference = 2B19397C2DD89DCA0067AABA /* MessageFilterAppUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
+			productName = MessageFilterExtension;
+			productReference = 2B1939A52DD8D6100067AABA /* MessageFilterExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -176,13 +191,8 @@
 					2B1939642DD89DC70067AABA = {
 						CreatedOnToolsVersion = 16.3;
 					};
-					2B1939712DD89DCA0067AABA = {
+					2B1939A42DD8D6100067AABA = {
 						CreatedOnToolsVersion = 16.3;
-						TestTargetID = 2B1939642DD89DC70067AABA;
-					};
-					2B19397B2DD89DCA0067AABA = {
-						CreatedOnToolsVersion = 16.3;
-						TestTargetID = 2B1939642DD89DC70067AABA;
 					};
 				};
 			};
@@ -201,8 +211,7 @@
 			projectRoot = "";
 			targets = (
 				2B1939642DD89DC70067AABA /* MessageFilterApp */,
-				2B1939712DD89DCA0067AABA /* MessageFilterAppTests */,
-				2B19397B2DD89DCA0067AABA /* MessageFilterAppUITests */,
+				2B1939A42DD8D6100067AABA /* MessageFilterExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -215,14 +224,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2B1939702DD89DCA0067AABA /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2B19397A2DD89DCA0067AABA /* Resources */ = {
+		2B1939A32DD8D6100067AABA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -239,14 +241,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		2B19396E2DD89DCA0067AABA /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		2B1939782DD89DCA0067AABA /* Sources */ = {
+		2B1939A12DD8D6100067AABA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -256,15 +251,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		2B1939742DD89DCA0067AABA /* PBXTargetDependency */ = {
+		2B1939AB2DD8D6100067AABA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2B1939642DD89DC70067AABA /* MessageFilterApp */;
-			targetProxy = 2B1939732DD89DCA0067AABA /* PBXContainerItemProxy */;
-		};
-		2B19397E2DD89DCA0067AABA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 2B1939642DD89DC70067AABA /* MessageFilterApp */;
-			targetProxy = 2B19397D2DD89DCA0067AABA /* PBXContainerItemProxy */;
+			target = 2B1939A42DD8D6100067AABA /* MessageFilterExtension */;
+			targetProxy = 2B1939AA2DD8D6100067AABA /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -321,7 +311,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -378,7 +368,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -393,8 +383,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MessageFilterApp/MessageFilterApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ADQP4RS58Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -402,6 +394,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -420,8 +413,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MessageFilterApp/MessageFilterApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ADQP4RS58Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -429,6 +424,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -442,71 +438,57 @@
 			};
 			name = Release;
 		};
-		2B19398A2DD89DCA0067AABA /* Debug */ = {
+		2B1939AF2DD8D6100067AABA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_ENTITLEMENTS = MessageFilterExtension/MessageFilterExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ADQP4RS58Y;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				INFOPLIST_FILE = MessageFilterExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MessageFilterExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterAppTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterApp.MessageFilterExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MessageFilterApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MessageFilterApp";
 			};
 			name = Debug;
 		};
-		2B19398B2DD89DCA0067AABA /* Release */ = {
+		2B1939B02DD8D6100067AABA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_ENTITLEMENTS = MessageFilterExtension/MessageFilterExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ADQP4RS58Y;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				INFOPLIST_FILE = MessageFilterExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MessageFilterExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterAppTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterApp.MessageFilterExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MessageFilterApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MessageFilterApp";
-			};
-			name = Release;
-		};
-		2B19398D2DD89DCA0067AABA /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterAppUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = MessageFilterApp;
-			};
-			name = Debug;
-		};
-		2B19398E2DD89DCA0067AABA /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.three.MessageFilterAppUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = MessageFilterApp;
 			};
 			name = Release;
 		};
@@ -531,20 +513,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2B1939892DD89DCA0067AABA /* Build configuration list for PBXNativeTarget "MessageFilterAppTests" */ = {
+		2B1939AE2DD8D6100067AABA /* Build configuration list for PBXNativeTarget "MessageFilterExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2B19398A2DD89DCA0067AABA /* Debug */,
-				2B19398B2DD89DCA0067AABA /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		2B19398C2DD89DCA0067AABA /* Build configuration list for PBXNativeTarget "MessageFilterAppUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				2B19398D2DD89DCA0067AABA /* Debug */,
-				2B19398E2DD89DCA0067AABA /* Release */,
+				2B1939AF2DD8D6100067AABA /* Debug */,
+				2B1939B02DD8D6100067AABA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

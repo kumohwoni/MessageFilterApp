@@ -52,10 +52,13 @@ struct WhitelistView: View {
     }
 
     func saveKeywords() {
-        UserDefaults.standard.set(keywords, forKey: "whitelist")
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        defaults?.set(keywords, forKey: "whitelist")
     }
 
     func loadKeywords() {
-        keywords = UserDefaults.standard.stringArray(forKey: "whitelist") ?? []
+        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")
+        keywords = defaults?.stringArray(forKey: "whitelist") ?? []
     }
+
 }

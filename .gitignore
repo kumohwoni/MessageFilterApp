@@ -1,0 +1,5 @@
+weight.bin
+model.mlmodel
+WordPieceTokenizer.swift
+vocab.txt
+MessageFilterApp/Model.mlpackage/Data/com.apple.CoreML/weights/weight.bin

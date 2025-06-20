@@ -1,10 +1,19 @@
+//
+//  ContentView.swift
+//  MessageFilterApp
+//
 import SwiftUI
 
 struct ContentView: View {
     @State private var localSpamFilterOn = true
     @State private var advancedSpamFilterOn = false
-    @State private var totalMessages = UserDefaults.standard.integer(forKey: "totalMessages")
-    @State private var blockedMessages = UserDefaults.standard.integer(forKey: "blockedMessages")
+
+    @StateObject private var stats = StatsManager()
+    @Environment(\.scenePhase) private var scenePhase
+
+    var spamRate: Double {
+        Double(stats.blockedMessages) / max(Double(stats.totalMessages), 1.0)
+    }
 
     var body: some View {
         NavigationView {
@@ -19,10 +28,10 @@ struct ContentView: View {
                     // 통계
                     VStack(alignment: .leading, spacing: 10) {
 
-                        Text("전체 문자 \(totalMessages)건 중")
+                        Text("전체 문자 \(stats.totalMessages)건 중")
                             .font(.subheadline)
 
-                        Text("스팸 문자 \(blockedMessages)건을 차단했어요")
+                        Text("스팸 문자 \(stats.blockedMessages)건을 차단했어요")
                             .font(.headline)
                             .foregroundColor(.red)
                         
@@ -35,11 +44,11 @@ struct ContentView: View {
                                     .stroke(Color.gray.opacity(0.2), lineWidth: 20)
 
                                 Circle()
-                                    .trim(from: 0, to: CGFloat(Double(blockedMessages) / max(Double(totalMessages), 1.0)))
+                                    .trim(from: 0, to: CGFloat(Double(stats.blockedMessages) / max(Double(stats.totalMessages), 1.0)))
                                     .stroke(Color.red, style: StrokeStyle(lineWidth: 20, lineCap: .round))
                                     .rotationEffect(.degrees(-90))
 
-                                Text("\(Int(Double(blockedMessages) / max(Double(totalMessages), 1.0) * 100))%")
+                                Text("\(Int(spamRate * 100))%")
                                     .font(.title2)
                                     .bold()
                             }
@@ -58,31 +67,63 @@ struct ContentView: View {
                     }
 
                     // 테스트용 버튼
-                    Button(action: {
-                        totalMessages += 1
-                        blockedMessages += 1
-                        saveStats()
-                    }) {
-                        Text("테스트용 메시지 차단 증가")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
+                    Button("테스트용 메시지 차단 증가") {
+                        let addedTotal   = Int.random(in: 1...10)
+                        let addedBlocked = Int.random(in: 1...min(addedTotal, 10))
+                        stats.totalMessages   += addedTotal
+                        stats.blockedMessages += addedBlocked
                     }
+                    Button("UserDefaults 직접 증가") {
+                        let defaults = UserDefaults(suiteName: "group.com.messagefilterapp.shared")!
+                        let before = defaults.integer(forKey: "totalReceivedCount")
+                        defaults.set(before + 1, forKey: "totalReceivedCount")
+                        defaults.synchronize()
+                        stats.reload()
+                    }
+
+
+
                 }
                 .padding()
             }
+            // 1) pull-to-refresh
+            .refreshable {
+                stats.reload()  // UserDefaults에서 강제로 한 번 더 읽어오기
+            }
             .navigationBarHidden(true)
         }
-    }
+        .onAppear()
+        {
+            stats.reload()
+        }
+        // 2) 앱 포그라운드 진입 시 자동 갱신
+        .onChange(of: scenePhase) {
+            // 값이 바뀔 때마다 실행되므로, 직접 새 값을 읽습니다.
+            if scenePhase == .active {
+                stats.reload()
+            }
+        }
 
-    func saveStats() {
-        UserDefaults.standard.set(totalMessages, forKey: "totalMessages")
-        UserDefaults.standard.set(blockedMessages, forKey: "blockedMessages")
     }
 }
 
-#Preview {
-    ContentView()
+final class StatsManager: ObservableObject {
+    private let shared = UserDefaults(suiteName: "group.com.messagefilterapp.shared")!
+
+    @Published var totalMessages: Int = {
+        UserDefaults(suiteName: "group.com.messagefilterapp.shared")!.integer(forKey: "totalReceivedCount")
+    }()
+    @Published var blockedMessages: Int = {
+        UserDefaults(suiteName: "group.com.messagefilterapp.shared")!.integer(forKey: "junkCount")
+    }()
+
+    init() {
+        // 이후 실시간 갱신이 필요하면 reload()를 쓰거나 scenePhase/pull-to-refresh 로직만 남기면 됩니다.
+    }
+
+    func reload() {
+        totalMessages   = shared.integer(forKey: "totalReceivedCount")
+        blockedMessages = shared.integer(forKey: "junkCount")
+    }
 }
+

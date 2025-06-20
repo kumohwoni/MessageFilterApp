@@ -9,6 +9,34 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>MessageFilterExtension.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>2B1939642DD89DC70067AABA</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>2B1939712DD89DCA0067AABA</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>2B19397B2DD89DCA0067AABA</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>2B1939A42DD8D6100067AABA</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 	</dict>
 </dict>
 </plist>
